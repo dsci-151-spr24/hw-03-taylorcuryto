@@ -74,8 +74,30 @@ Answers to this question are stored in the `harass5` variable in our dataset.
 
 1.  What are the possible responses to this question and how many respondents chose each of these answers?
 
+```{r}
+
+response_counts <- table(gss16$harass5)
+response_table <- as.data.frame(response_counts)
+colnames(response_table) <- c("Response", "Count")
+
+print(response_table)
+```
+
+
 2.  What percent of the respondents for whom this question is applicable\
     (i.e. excluding `NA`s and `Does not apply`s) have been harassed by their superiors or co-workers at their job.
+    
+```{r}
+valid_responses <- gss16$harass5[!is.na(gss16$harass5) & gss16$harass5 != "Does not apply"]
+
+total_valid <- length(valid_responses)
+harassed_count <- sum(valid_responses == "Yes")
+harassed_proportion <- harassed_count / total_valid
+harassed_percentage <- harassed_proportion * 100
+
+harassed_percentage
+```
+
 
 🧶 ✅ ⬆️ Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards.*
 
