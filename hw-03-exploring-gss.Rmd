@@ -242,13 +242,53 @@ Responses that were originally Don't know, No answer and Not applicable are alre
 10. In a new variable, recode `advfront` such that Strongly Agree and Agree are mapped to `"Yes"`, and Disagree and Strongly disagree are mapped to `"No"`.
     The remaining levels can be left as is.
     Don't overwrite the existing `advfront`, instead pick a different, informative name for your new variable.
+    
+```{r}
+
+library(dplyr)
+
+gss16 <- gss16 %>%
+  mutate(advfront_recode = case_when(
+    advfront %in% c("Strongly agree", "Agree") ~ "Yes",
+    advfront %in% c("Disagree", "Strongly disagree") ~ "No",
+    TRUE ~ as.character(advfront)  # Keeps other values unchanged
+  ))
+
+```
+
 
 11. In a new variable, recode `polviews` such that Extremely liberal, Liberal, and Slightly liberal, are mapped to `"Liberal"`, and Slghtly conservative, Conservative, and Extrmly conservative disagree are mapped to `"Conservative"`.
     The remaining levels can be left as is.
     Make sure that the levels are in a reasonable order.
     Don't overwrite the existing `polviews`, instead pick a different, informative name for your new variable.
+    
+```{r}
+library(dplyr)
+
+gss16 <- gss16 %>%
+  mutate(polviews_recode = case_when(
+    polviews %in% c("Extremely liberal", "Liberal", "Slightly liberal") ~ "Liberal",
+    polviews %in% c("Slghtly conservative", "Conservative", "Extrmly conservative") ~ "Conservative",
+    TRUE ~ as.character(polviews)
+  )) 
+```
+
 
 12. Create a visualization that displays the relationship between these two new variables and interpret it.
+
+```{r}
+library(ggplot2)
+
+ggplot(gss16, aes(x = polviews_recode, fill = advfront_recode)) +
+  geom_bar(position = "fill") + 
+  labs(title = "Relationship Between Political Views and Support for Advancing Technology",
+       x = "Political Views",
+       y = "Proportion",
+       fill = "Supports Advancing Technology") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+***They seem to be very similar responses for each party. Most people are in support of advancing technology. There is a little higher amount who aren't sure or do not support advancing technology from the conservative and NA categories.***
 
 🧶 ✅ ⬆️ Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards and review the md document on GitHub to make sure you're happy with the final state of your work.*
 
