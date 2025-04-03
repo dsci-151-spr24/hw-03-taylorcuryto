@@ -6,7 +6,7 @@ output: html_document
 
 ```{r include = FALSE}
 knitr::opts_chunk$set(
-  eval = FALSE,
+  eval = TRUE,
   out.width = "80%",
   fig.asp = 0.618,
   fig.width = 10,
@@ -109,25 +109,110 @@ For example, if the response is 2.5 hrs, this would be recorded as `emailhr = 2`
 
 3.  Create a new variable called `email` that combines these two variables to reports the number of minutes the respondents spend on email weekly.
 
+```{r}
+gss16$email <- (gss16$emailhr * 60) + gss16$emailmin
+```
+
+
 4.  Visualize the distribution of this new variable.
     Find the mean and the median number of minutes respondents spend on email weekly.
     Is the mean or the median a better measure of the typical among of time Americans spend on email weekly?
     Why?
 
+```{r}
+library(ggplot2)
+
+ggplot(gss16, aes(x = email)) +
+  geom_histogram(binwidth = 200, fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Weekly Email Time (in Minutes)", x = "Minutes", y = "Frequency") +
+  theme_minimal()
+```
+
+```{r}
+
+mean_email <- mean(gss16$email, na.rm = TRUE)
+median_email <- median(gss16$email, na.rm = TRUE)
+
+print(paste("Mean =", mean_email))
+print(paste("Median =", median_email))
+
+```
+
+***Since data is skewed to the right, the median is the better option because the outliers could make the average number not accurate.***
+
 5.  Create another new variable, `snap_insta` that is coded as "Yes" if the respondent reported using any of Snapchat (`snapchat`) or Instagram (`instagrm`), and "No" if not.
     If the recorded value was `NA` for both of these questions, the value in your new variable should also be `NA`.
+    
+```{r}
+gss16$snap_insta <- ifelse(
+  (!is.na(gss16$snapchat) & gss16$snapchat == "Yes") | 
+  (!is.na(gss16$instagrm) & gss16$instagrm == "Yes"), 
+  "Yes", 
+  ifelse(is.na(gss16$snapchat) & is.na(gss16$instagrm), NA, "No")
+)
 
-6.  Calculate the percentage of Yes's for `snap_insta` among those who answered the question, i.e. excluding `NA`s.
+```
+
+
+6. Calculate the percentage of Yes's for `snap_insta` among those who answered the question, i.e. excluding `NA`s.
+
+```{r}
+responses <- gss16$snap_insta[!is.na(gss16$snap_insta)]
+
+valid <- length(responses)
+count <- sum(responses == "Yes")
+proportion <- count / valid
+percentage <- proportion * 100
+
+percentage
+```
+
 
 7.  What are the possible responses to the question *Last week were you working full time, part time, going to school, keeping house, or what?* and how many respondents chose each of these answers?
     Note that this information is stored in the `wrkstat` variable.
+    
+```{r}
+counts <- table(gss16$wrkstat)
+table <- as.data.frame(counts)
+colnames(table) <- c("Response", "Count")
+
+print(table)
+```
 
 8.  Fit a model predicting `email` (number of minutes per week spent on email) from `educ` (number of years of education), `wrkstat`, and `snap_insta`.
     Interpret the slopes for each of these variables.
+    
+```{r}
+
+library(tidyverse)
+library(tidymodels)
+
+model <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(email ~ educ + wrkstat + snap_insta, data = gss16)
+
+tidy(model)
+```
+
+***The slope of the variables are either positive or negative. A positive slope means that specific variable is associated with more minutes spent on email. A negative slope means that that specific variable is associated with less minutes spent on email. The larger the number related to the varible means that it has a stronger positive effect on email.***
 
 9.  Create a predicted values vs. residuals plot for this model.
     Are there any issues with the model?
     If yes, describe them.
+
+```{r}
+
+predicted_values <- predict(model, new_data = gss16)$.pred
+residuals <- gss16$email - predicted_values
+
+plot(predicted_values, residuals, 
+     main = "Predicted Values vs. Residuals",
+     xlab = "Predicted Values", 
+     ylab = "Residuals",
+     pch = 19, col = "blue")
+
+```
+***There seems to be an issue because there are a lot of positive values that almost seem like outliers because they are not in the cluster.***
 
 🧶 ✅ ⬆️ Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards.*
 
